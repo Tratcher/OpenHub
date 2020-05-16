@@ -83,6 +83,10 @@
     <string name="commits">Commits</string>
     <string name="commit">Commit</string>
 
+    <string name="projects">Projects</string>
+    <string name="project_name">Project Name</string>
+    <string name="project_description">Project Description</string>
+
     <string name="star">Star</string>
     <string name="unstar">Unstar</string>
     <string name="unstarred">Unstarred</string>

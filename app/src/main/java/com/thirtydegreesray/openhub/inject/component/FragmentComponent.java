@@ -15,6 +15,7 @@ import com.thirtydegreesray.openhub.ui.fragment.IssueTimelineFragment;
 import com.thirtydegreesray.openhub.ui.fragment.IssuesFragment;
 import com.thirtydegreesray.openhub.ui.fragment.NotificationsFragment;
 import com.thirtydegreesray.openhub.ui.fragment.ProfileInfoFragment;
+import com.thirtydegreesray.openhub.ui.fragment.ProjectsFragment;
 import com.thirtydegreesray.openhub.ui.fragment.ReleasesFragment;
 import com.thirtydegreesray.openhub.ui.fragment.RepoFilesFragment;
 import com.thirtydegreesray.openhub.ui.fragment.RepoInfoFragment;
@@ -47,6 +48,7 @@ public interface FragmentComponent {
     void inject(IssuesFragment fragment);
     void inject(IssueTimelineFragment fragment);
     void inject(CommitsFragment fragment);
+    void inject(ProjectsFragment fragment);
     void inject(CommitFilesFragment fragment);
     void inject(NotificationsFragment fragment);
     void inject(BookmarksFragment fragment);
