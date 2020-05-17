@@ -64,6 +64,8 @@ public class Project implements Parcelable {
         return body;
     }
 
+    public int getId() { return id; }
+
     @Override
     public int describeContents() {
         return 0;
@@ -106,5 +108,4 @@ public class Project implements Parcelable {
             return new Project[size];
         }
     };
-
 }

@@ -2,43 +2,54 @@
 
 package com.thirtydegreesray.openhub.mvp.presenter;
 
-import android.support.annotation.NonNull;
-
 import com.thirtydegreesray.dataautoaccess.annotation.AutoAccess;
+import com.thirtydegreesray.openhub.AppData;
+import com.thirtydegreesray.openhub.R;
+import com.thirtydegreesray.openhub.dao.Bookmark;
+import com.thirtydegreesray.openhub.dao.BookmarkDao;
 import com.thirtydegreesray.openhub.dao.DaoSession;
+import com.thirtydegreesray.openhub.dao.LocalRepo;
+import com.thirtydegreesray.openhub.dao.Trace;
+import com.thirtydegreesray.openhub.dao.TraceDao;
 import com.thirtydegreesray.openhub.http.core.HttpObserver;
+import com.thirtydegreesray.openhub.http.core.HttpProgressSubscriber;
 import com.thirtydegreesray.openhub.http.core.HttpResponse;
-import com.thirtydegreesray.openhub.http.error.HttpPageNoFoundError;
-import com.thirtydegreesray.openhub.mvp.contract.IProjectsContract;
-import com.thirtydegreesray.openhub.mvp.model.CommitsComparison;
+import com.thirtydegreesray.openhub.mvp.contract.IProjectContract;
+import com.thirtydegreesray.openhub.mvp.contract.IRepositoryContract;
+import com.thirtydegreesray.openhub.mvp.model.Branch;
 import com.thirtydegreesray.openhub.mvp.model.Project;
-import com.thirtydegreesray.openhub.mvp.model.RepoCommit;
-import com.thirtydegreesray.openhub.mvp.presenter.base.BasePagerPresenter;
-import com.thirtydegreesray.openhub.ui.activity.CommitsListActivity;
-import com.thirtydegreesray.openhub.ui.activity.ProjectsListActivity;
-import com.thirtydegreesray.openhub.util.StringUtils;
+import com.thirtydegreesray.openhub.mvp.model.ProjectColumn;
+import com.thirtydegreesray.openhub.mvp.model.Repository;
+import com.thirtydegreesray.openhub.mvp.presenter.base.BasePresenter;
+import com.thirtydegreesray.openhub.ui.activity.RepositoryActivity;
+import com.thirtydegreesray.openhub.util.StarWishesHelper;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
+import okhttp3.ResponseBody;
 import retrofit2.Response;
 import rx.Observable;
+import rx.functions.Func1;
 
 /**
- * Created by Tratcher on 2020/05/16
+ * Created by ThirtyDegreesRay on 2017/8/9 21:42:47
  */
 
-public class ProjectPresenter extends BasePagerPresenter<IProjectsContract.View>
-        implements IProjectsContract.Presenter {
+public class ProjectPresenter extends BasePresenter<IProjectContract.View>
+        implements IProjectContract.Presenter {
 
-    @AutoAccess ProjectsListActivity.ProjectsListType type ;
-    @AutoAccess String name ;
-    @AutoAccess String description ;
-    @AutoAccess String user ;
-    @AutoAccess String repo ;
+    @AutoAccess(dataName = "project") Project project;
+    private ArrayList<ProjectColumn> projectColumns;
 
-    private ArrayList<Project> projects;
+    @AutoAccess String projectName;
+    @AutoAccess int projectId;
+
+    private boolean isStatusChecked = false;
+    @AutoAccess boolean isTraceSaved = false;
 
     @Inject
     public ProjectPresenter(DaoSession daoSession) {
@@ -46,51 +57,49 @@ public class ProjectPresenter extends BasePagerPresenter<IProjectsContract.View>
     }
 
     @Override
-    protected void loadData() {
-        loadProjects(false, 1);
+    public void onViewInitialized() {
+        super.onViewInitialized();
+        if (projectColumns != null) {
+            projectName = project.getName();
+            projectId = project.getId();
+            mView.showProject(project, projectColumns);
+            getColumnInfo(false);
+        } else {
+            getColumnInfo(true);
+        }
     }
 
-    @Override
-    public void loadProjects(final boolean isReload, final int page) {
-        mView.showLoading();
-        final boolean readCacheFirst = !isReload && page == 1;
-        HttpObserver<ArrayList<Project>> httpObserver = new HttpObserver<ArrayList<Project>>() {
-            @Override
-            public void onError(Throwable error) {
-                mView.hideLoading();
-                if (!StringUtils.isBlankList(projects)) {
-                    mView.showErrorToast(getErrorTip(error));
-                } else if (error instanceof HttpPageNoFoundError) {
-                    mView.showProjects(new ArrayList<Project>());
-                } else {
-                    mView.showLoadError(getErrorTip(error));
-                }
-            }
+    private void getColumnInfo(final boolean isShowLoading) {
+        if (isShowLoading) mView.showLoading();
+        HttpObserver<ArrayList<ProjectColumn>> httpObserver =
+                new HttpObserver<ArrayList<ProjectColumn>>() {
+                    @Override
+                    public void onError(Throwable error) {
+                        if (isShowLoading) mView.hideLoading();
+                        mView.showErrorToast(getErrorTip(error));
+                    }
 
+                    @Override
+                    public void onSuccess(HttpResponse<ArrayList<ProjectColumn>> response) {
+                        if (isShowLoading) mView.hideLoading();
+                        projectColumns = response.body();
+                        mView.showProject(project, projectColumns);
+                    }
+                };
+
+        generalRxHttpExecute(new IObservableCreator<ArrayList<ProjectColumn>>() {
             @Override
-            public void onSuccess(HttpResponse<ArrayList<Project>> response) {
-                mView.hideLoading();
-                if (projects == null || isReload || readCacheFirst) {
-                    projects = response.body();
-                } else {
-                    projects.addAll(response.body());
-                }
-                if (response.body().size() == 0 && projects.size() != 0) {
-                    mView.setCanLoadMore(false);
-                } else {
-                    mView.showProjects(projects);
-                }
+            public Observable<Response<ArrayList<ProjectColumn>>> createObservable(boolean forceNetWork) {
+                return getProjectService().getProjectColumns(forceNetWork, project.getId());
             }
-        };
-        generalRxHttpExecute(new IObservableCreator<ArrayList<Project>>() {
-            @Override
-            public Observable<Response<ArrayList<Project>>> createObservable(boolean forceNetWork) {
-                return getProjectService().getRepoProjects(forceNetWork, user, repo, page);
-            }
-        }, httpObserver, readCacheFirst);
+        }, httpObserver, true);
     }
 
-    public ProjectsListActivity.ProjectsListType getType() {
-        return type;
+    public Project getProject() {
+        return project;
+    }
+
+    public String getProjectName() {
+        return project == null ? projectName : project.getName();
     }
 }

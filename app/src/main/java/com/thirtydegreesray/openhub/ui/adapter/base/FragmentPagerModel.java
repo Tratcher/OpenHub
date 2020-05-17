@@ -8,11 +8,14 @@ import android.support.v4.app.Fragment;
 
 import com.thirtydegreesray.openhub.R;
 import com.thirtydegreesray.openhub.mvp.model.Issue;
+import com.thirtydegreesray.openhub.mvp.model.Project;
+import com.thirtydegreesray.openhub.mvp.model.ProjectColumn;
 import com.thirtydegreesray.openhub.mvp.model.Repository;
 import com.thirtydegreesray.openhub.mvp.model.SearchModel;
 import com.thirtydegreesray.openhub.mvp.model.User;
 import com.thirtydegreesray.openhub.mvp.model.filter.TrendingSince;
 import com.thirtydegreesray.openhub.ui.fragment.ActivityFragment;
+import com.thirtydegreesray.openhub.ui.fragment.CardsFragment;
 import com.thirtydegreesray.openhub.ui.fragment.CommitsFragment;
 import com.thirtydegreesray.openhub.ui.fragment.IssuesFragment;
 import com.thirtydegreesray.openhub.ui.fragment.MarkdownEditorFragment;
@@ -72,6 +75,21 @@ public class FragmentPagerModel {
                         getFragment(fragments, 4, () -> ProjectsFragment.createForRepo(
                                 repository.getOwner().getLogin(), repository.getName())))
         ));
+    }
+
+    public static List<FragmentPagerModel> createProjectColumnsPagerList(@NonNull Context context
+            , @NonNull final Project project, @NonNull ArrayList<ProjectColumn> columns, @NonNull ArrayList<Fragment> fragments) {
+
+        List<FragmentPagerModel> models = new ArrayList<>();
+
+        for (int i = 0; i < columns.size(); i++)
+        {
+            ProjectColumn column = columns.get(i);
+            models.add(new FragmentPagerModel(column.getName(),
+                            getFragment(fragments, i, () -> CardsFragment.create(column.getId()))));
+        }
+
+        return  models;
     }
 
     public static List<FragmentPagerModel> createProfilePagerList(Context context, final User user

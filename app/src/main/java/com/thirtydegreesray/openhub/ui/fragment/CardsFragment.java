@@ -10,14 +10,18 @@ import com.thirtydegreesray.openhub.R;
 import com.thirtydegreesray.openhub.inject.component.AppComponent;
 import com.thirtydegreesray.openhub.inject.component.DaggerFragmentComponent;
 import com.thirtydegreesray.openhub.inject.module.FragmentModule;
+import com.thirtydegreesray.openhub.mvp.contract.ICardsContract;
 import com.thirtydegreesray.openhub.mvp.contract.IProjectsContract;
 import com.thirtydegreesray.openhub.mvp.model.Branch;
+import com.thirtydegreesray.openhub.mvp.model.Card;
 import com.thirtydegreesray.openhub.mvp.model.Project;
 import com.thirtydegreesray.openhub.mvp.model.Repository;
+import com.thirtydegreesray.openhub.mvp.presenter.CardPresenter;
 import com.thirtydegreesray.openhub.mvp.presenter.ProjectsPresenter;
 import com.thirtydegreesray.openhub.ui.activity.ProjectActivity;
 import com.thirtydegreesray.openhub.ui.activity.ProjectsListActivity;
 import com.thirtydegreesray.openhub.ui.activity.RepositoryActivity;
+import com.thirtydegreesray.openhub.ui.adapter.CardsAdapter;
 import com.thirtydegreesray.openhub.ui.adapter.ProjectsAdapter;
 import com.thirtydegreesray.openhub.ui.fragment.base.ListFragment;
 import com.thirtydegreesray.openhub.util.BundleHelper;
@@ -28,25 +32,24 @@ import java.util.ArrayList;
  * Created by Tratcher on 2020/05/16
  */
 
-public class ProjectsFragment extends ListFragment<ProjectsPresenter, ProjectsAdapter>
-        implements IProjectsContract.View, RepositoryActivity.RepositoryListener {
+public class CardsFragment extends ListFragment<CardPresenter, CardsAdapter>
+        implements ICardsContract.View, ProjectActivity.ProjectListener {
 
-    public static ProjectsFragment createForRepo(@NonNull String user, @NonNull String repo){
-        ProjectsFragment fragment = new ProjectsFragment();
-        fragment.setArguments(BundleHelper.builder().put("type", ProjectsListActivity.ProjectsListType.Repo)
-                .put("user", user).put("repo", repo).build());
+    public static CardsFragment create(@NonNull int columnId){
+        CardsFragment fragment = new CardsFragment();
+        fragment.setArguments(BundleHelper.builder().put("columnId", columnId).build());
         return fragment;
     }
 
     @Override
     protected void initFragment(Bundle savedInstanceState) {
         super.initFragment(savedInstanceState);
-        setLoadMoreEnable(ProjectsListActivity.ProjectsListType.Repo.equals(mPresenter.getType()));
+        // TODO: setLoadMoreEnable(ProjectsListActivity.ProjectsListType.Repo.equals(mPresenter.getType()));
     }
 
     @Override
-    public void showProjects(ArrayList<Project> commits) {
-        adapter.setData(commits);
+    public void showCards(ArrayList<Card> cards) {
+        adapter.setData(cards);
         postNotifyDataSetChanged();
     }
 
@@ -66,18 +69,18 @@ public class ProjectsFragment extends ListFragment<ProjectsPresenter, ProjectsAd
 
     @Override
     protected void onReLoadData() {
-        mPresenter.loadProjects(true, 1);
+        mPresenter.loadCards(1, true);
     }
 
     @Override
     protected String getEmptyTip() {
-        return getString(R.string.no_commits);
+        return getString(R.string.no_cards);
     }
 
     @Override
     protected void onLoadMore(int page) {
         super.onLoadMore(page);
-        mPresenter.loadProjects(false, page);
+        mPresenter.loadCards(page, false);
     }
 
     @Override
@@ -89,16 +92,12 @@ public class ProjectsFragment extends ListFragment<ProjectsPresenter, ProjectsAd
     @Override
     public void onItemClick(int position, @NonNull View view) {
         super.onItemClick(position, view);
-        ProjectActivity.show(getActivity(), adapter.getData().get(position));
+        // TODO
+        // ProjectActivity.show(getActivity(), adapter.getData().get(position));
     }
 
     @Override
-    public void onRepositoryInfoUpdated(Repository repository) {
-
-    }
-
-    @Override
-    public void onBranchChanged(Branch branch) {
+    public void onProjectInfoUpdated(Project project) {
 
     }
 }

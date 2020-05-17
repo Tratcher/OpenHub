@@ -86,6 +86,7 @@
     <string name="projects">Projects</string>
     <string name="project_name">Project Name</string>
     <string name="project_description">Project Description</string>
+    <string name="no_cards">No cards</string>
 
     <string name="star">Star</string>
     <string name="unstar">Unstar</string>

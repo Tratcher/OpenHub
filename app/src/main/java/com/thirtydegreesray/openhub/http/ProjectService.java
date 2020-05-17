@@ -4,7 +4,9 @@ package com.thirtydegreesray.openhub.http;
 
 import android.support.annotation.NonNull;
 
+import com.thirtydegreesray.openhub.mvp.model.Card;
 import com.thirtydegreesray.openhub.mvp.model.Project;
+import com.thirtydegreesray.openhub.mvp.model.ProjectColumn;
 
 import java.util.ArrayList;
 
@@ -21,6 +23,27 @@ import rx.Observable;
  */
 
 public interface ProjectService {
+
+    @Headers("Accept: application/vnd.github.inertia-preview+json")
+    @NonNull @GET("projects/{projectId}")
+    Observable<Response<Project>> getProjectInfo(
+            @Header("forceNetWork") boolean forceNetWork,
+            @Path("projectId") int id
+    );
+
+    @Headers("Accept: application/vnd.github.inertia-preview+json")
+    @NonNull @GET("projects/{projectId}/columns")
+    Observable<Response<ArrayList<ProjectColumn>>> getProjectColumns(
+            @Header("forceNetWork") boolean forceNetWork,
+            @Path("projectId") int id
+    );
+
+    @Headers("Accept: application/vnd.github.inertia-preview+json")
+    @NonNull @GET("projects/columns/{columnId}/cards")
+    Observable<Response<ArrayList<Card>>> getColumnCards(
+            @Header("forceNetWork") boolean forceNetWork,
+            @Path("columnId") int columnId
+    );
 
     @Headers("Accept: application/vnd.github.inertia-preview+json")
     @NonNull @GET("repos/{owner}/{repo}/projects")
