@@ -64,6 +64,14 @@ public interface IssueService {
             @Path("issueNumber") int issueNumber
     );
 
+    @NonNull @GET("{path}")
+    @Headers("Accept: application/vnd.github.html,application/vnd.github.VERSION.raw," +
+            "application/vnd.github.squirrel-girl-preview")
+    Observable<Response<Issue>> getIssueInfo(
+            @Header("forceNetWork") boolean forceNetWork,
+            @Path(value="path", encoded=true) String path
+    );
+
     @NonNull @GET("repos/{owner}/{repo}/issues/{issueNumber}/timeline?per_page=60")
     @Headers("Accept: application/vnd.github.mockingbird-preview,application/vnd.github.html," +
             " application/vnd.github.VERSION.raw,application/vnd.github.squirrel-girl-preview")

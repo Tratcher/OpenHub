@@ -18,6 +18,6 @@ public interface ICardsContract {
     }
 
     interface Presenter extends IBasePagerContract.Presenter<ICardsContract.View>{
-        void loadCards(int page, boolean isReload);
+        void loadCards(boolean isReload);
     }
 }

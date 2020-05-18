@@ -44,16 +44,16 @@ public class CardPresenter extends BasePagerPresenter<ICardsContract.View>
 
     @Override
     protected void loadData() {
-        loadCards(1, false);
+        loadCards(false);
     }
 
     @Override
-    public void loadCards(final int page, final boolean isReload) {
-        boolean readCacheFirst = page == 1 && !isReload;
-        loadCards(page, isReload, readCacheFirst);
+    public void loadCards(final boolean isReload) {
+        boolean readCacheFirst = !isReload;
+        loadCards(isReload, readCacheFirst);
     }
 
-    private void loadCards(final int page, final boolean isReload, final boolean readCacheFirst){
+    private void loadCards(final boolean isReload, final boolean readCacheFirst){
 
 //        HttpSubscriber<ResponseBody> subscriber = new HttpSubscriber<ResponseBody>(
 //                new HttpObserver<ResponseBody>() {
@@ -75,26 +75,25 @@ public class CardPresenter extends BasePagerPresenter<ICardsContract.View>
                 new HttpObserver<ArrayList<Card>>() {
                     @Override
                     public void onError(Throwable error) {
-                        mView.hideLoading();
                         handleError(error);
                     }
 
                     @Override
                     public void onSuccess(HttpResponse<ArrayList<Card>> response) {
-                        mView.hideLoading();
-                        handleSuccess(response.body(), isReload, readCacheFirst);
+                        handleCardsSuccess(response.body(), isReload, readCacheFirst);
                     }
                 };
 
         generalRxHttpExecute(new IObservableCreator<ArrayList<Card>>() {
             @Override
             public Observable<Response<ArrayList<Card>>> createObservable(boolean forceNetWork) {
-                return getProjectService().getColumnCards(forceNetWork, columnId);
+                return getProjectService().getColumnCards(forceNetWork, columnId, "not_archived");
             }
         }, httpObserver, readCacheFirst);
     }
 
     private void handleError(Throwable error){
+        mView.hideLoading();
         if(!StringUtils.isBlankList(cards)){
             mView.showErrorToast(getErrorTip(error));
         } else if(error instanceof HttpPageNoFoundError){
@@ -104,16 +103,86 @@ public class CardPresenter extends BasePagerPresenter<ICardsContract.View>
         }
     }
 
-    private void handleSuccess(ArrayList<Card> resultCards, boolean isReload, boolean readCacheFirst){
-        if (isReload || cards == null || readCacheFirst) {
-            cards = resultCards;
-        } else {
-            cards.addAll(resultCards);
+    private void handleCardsSuccess(ArrayList<Card> resultCards, boolean isReload, boolean readCacheFirst){
+        cards = resultCards;
+        mView.setCanLoadMore(false);
+
+        if (cards.size() > 0) {
+            CardContentDownloader contentDownloader = new CardContentDownloader(cards, isReload, readCacheFirst);
+            contentDownloader.LoadNext();
         }
-        if (resultCards.size() == 0 && cards.size() != 0) {
-            mView.setCanLoadMore(false);
-        } else {
+        else{
+            handleIssueDownloadComplete();
+        }
+    }
+
+    private void handleIssueDownloadComplete() {
+        mView.hideLoading();
+        if (cards.size() > 0) {
             mView.showCards(cards);
+        }
+    }
+
+    private class CardContentDownloader {
+
+        private ArrayList<Card> cards;
+        private boolean isReload;
+        private boolean readCacheFirst;
+        private int offset;
+
+        public CardContentDownloader(ArrayList<Card> cards, boolean isReload, boolean readCacheFirst) {
+            this.cards = cards;
+            this.isReload = isReload;
+            this.readCacheFirst = readCacheFirst;
+            offset = 0;
+        }
+
+        public void LoadNext() {
+
+            // Skip things we don't know how to download.
+            while (offset < cards.size() && cards.get(offset).getCardType() != Card.CardType.Issue) {
+                offset++;
+            }
+            if (offset >= cards.size())
+            {
+                handleIssueDownloadComplete();
+                return;
+            }
+
+            Card card = cards.get(offset);
+            String issuePath = card.getContentUrl().substring("https://api.github.com/".length());
+
+            HttpObserver<Issue> httpObserver =
+                    new HttpObserver<Issue>() {
+                        @Override
+                        public void onError(Throwable error) {
+                            handleIssueError(error);
+                        }
+
+                        @Override
+                        public void onSuccess(HttpResponse<Issue> response) {
+                            handleIssueSuccess(response.body(), isReload, readCacheFirst);
+                        }
+                    };
+
+            generalRxHttpExecute(new IObservableCreator<Issue>() {
+                @Override
+                public Observable<Response<Issue>> createObservable(boolean forceNetWork) {
+                    return getIssueService().getIssueInfo(forceNetWork, issuePath);
+                }
+            }, httpObserver, readCacheFirst);
+        }
+
+        private void handleIssueError(Throwable error) {
+            offset++;
+            LoadNext();
+        }
+
+        private void handleIssueSuccess(Issue issue, boolean isReload, boolean readCacheFirst) {
+            Card card = cards.get(offset);
+            card.setIssue(issue);
+            offset++;
+            LoadNext();
         }
     }
 }

@@ -42,7 +42,8 @@ public interface ProjectService {
     @NonNull @GET("projects/columns/{columnId}/cards")
     Observable<Response<ArrayList<Card>>> getColumnCards(
             @Header("forceNetWork") boolean forceNetWork,
-            @Path("columnId") int columnId
+            @Path("columnId") int columnId,
+            @Query("archived_state") String archivedState
     );
 
     @Headers("Accept: application/vnd.github.inertia-preview+json")

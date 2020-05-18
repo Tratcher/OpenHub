@@ -49,16 +49,34 @@ public class CardsAdapter extends BaseAdapter<CardsAdapter.ViewHolder, Card> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
         Card model = data.get(position);
-        holder.note.setText(model.getNote());
-        holder.contentUrl.setText(model.getContentUrl());
-        holder.contentId.setText("Card #" + model.getId());
+        switch (model.getCardType())
+        {
+            case Note:
+                holder.title.setText(model.getNote());
+                holder.detail.setText("");
+                holder.footer.setText("");
+                break;
+            case Issue:
+                Issue issue = model.getIssue();
+                if (issue != null) {
+                    holder.title.setText(issue.getTitle());
+                    holder.detail.setText(issue.getState() == Issue.IssueState.closed ? "Closed" : "");
+                    holder.footer.setText("#" + issue.getNumber());
+                    break;
+                }
+            default:
+                holder.title.setText("Card Type: " + model.getCardType());
+                holder.detail.setText(model.getContentUrl());
+                holder.footer.setText("Card #" + model.getId());
+                break;
+        }
     }
 
     class ViewHolder extends BaseViewHolder {
 
-        @BindView(R.id.note) TextView note;
-        @BindView(R.id.contentUrl) TextView contentUrl;
-        @BindView(R.id.contentId) TextView contentId;
+        @BindView(R.id.title) TextView title;
+        @BindView(R.id.detail) TextView detail;
+        @BindView(R.id.footer) TextView footer;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

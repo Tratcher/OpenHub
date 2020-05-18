@@ -21,6 +21,8 @@ public class Card implements Parcelable {
     @SerializedName("content_url") private String contentUrl;
     @SerializedName("project_url") private String projectUrl;
 
+    private Issue issue;
+
     public String getUrl() {
         return url;
     }
@@ -36,6 +38,41 @@ public class Card implements Parcelable {
     }
 
     public int getId() { return id; }
+
+    public void setIssue(Issue issue) {
+        this.issue = issue;
+    }
+
+    public Issue getIssue() { return issue; }
+
+    public enum CardType {
+        Unknown,
+        Note,
+        // ExternalIssue, // A note that's actually a url to an issue elsewhere.
+        Issue,
+        // PullRequest,
+    }
+
+    public CardType getCardType()
+    {
+        if (contentUrl == null && note == null)
+        {
+            return CardType.Unknown;
+        }
+
+        if (note != null)
+        {
+            return CardType.Note;
+        }
+
+        // "https://api.github.com/repos/{owner}/{repo}/issues/{issueNumber}"
+        if (contentUrl.startsWith("https://api.github.com/") && contentUrl.contains("/issues/"))
+        {
+            return CardType.Issue;
+        }
+
+        return CardType.Unknown;
+    }
 
     @Override
     public int describeContents() {

@@ -11,18 +11,12 @@ import com.thirtydegreesray.openhub.inject.component.AppComponent;
 import com.thirtydegreesray.openhub.inject.component.DaggerFragmentComponent;
 import com.thirtydegreesray.openhub.inject.module.FragmentModule;
 import com.thirtydegreesray.openhub.mvp.contract.ICardsContract;
-import com.thirtydegreesray.openhub.mvp.contract.IProjectsContract;
-import com.thirtydegreesray.openhub.mvp.model.Branch;
 import com.thirtydegreesray.openhub.mvp.model.Card;
 import com.thirtydegreesray.openhub.mvp.model.Project;
-import com.thirtydegreesray.openhub.mvp.model.Repository;
 import com.thirtydegreesray.openhub.mvp.presenter.CardPresenter;
-import com.thirtydegreesray.openhub.mvp.presenter.ProjectsPresenter;
+import com.thirtydegreesray.openhub.ui.activity.IssueDetailActivity;
 import com.thirtydegreesray.openhub.ui.activity.ProjectActivity;
-import com.thirtydegreesray.openhub.ui.activity.ProjectsListActivity;
-import com.thirtydegreesray.openhub.ui.activity.RepositoryActivity;
 import com.thirtydegreesray.openhub.ui.adapter.CardsAdapter;
-import com.thirtydegreesray.openhub.ui.adapter.ProjectsAdapter;
 import com.thirtydegreesray.openhub.ui.fragment.base.ListFragment;
 import com.thirtydegreesray.openhub.util.BundleHelper;
 
@@ -69,7 +63,7 @@ public class CardsFragment extends ListFragment<CardPresenter, CardsAdapter>
 
     @Override
     protected void onReLoadData() {
-        mPresenter.loadCards(1, true);
+        mPresenter.loadCards(true);
     }
 
     @Override
@@ -80,7 +74,7 @@ public class CardsFragment extends ListFragment<CardPresenter, CardsAdapter>
     @Override
     protected void onLoadMore(int page) {
         super.onLoadMore(page);
-        mPresenter.loadCards(page, false);
+        mPresenter.loadCards(false);
     }
 
     @Override
@@ -92,8 +86,11 @@ public class CardsFragment extends ListFragment<CardPresenter, CardsAdapter>
     @Override
     public void onItemClick(int position, @NonNull View view) {
         super.onItemClick(position, view);
-        // TODO
-        // ProjectActivity.show(getActivity(), adapter.getData().get(position));
+        Card card = adapter.getData().get(position);
+        if (card.getCardType() == Card.CardType.Issue
+        && card.getIssue() != null) {
+            IssueDetailActivity.show(getActivity(), card.getIssue());
+        }
     }
 
     @Override
